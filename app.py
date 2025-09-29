@@ -310,109 +310,109 @@ def create_interface():
                 )
             
             # Tab 2: Visualización del proceso de denoising
-            with gr.Tab("Visualización del Denoising"):
-                gr.Markdown("""
-                ## 🔬 Visualización del Proceso de Denoising
+            # with gr.Tab("Visualización del Denoising"):
+            #     gr.Markdown("""
+            #     ## 🔬 Visualización del Proceso de Denoising
                 
-                Esta sección te permite ver cómo el modelo transforma ruido puro en audio limpio paso a paso.
-                El modelo F5-TTS usa 32 pasos de "denoising" para generar el audio final.
-                """)
+            #     Esta sección te permite ver cómo el modelo transforma ruido puro en audio limpio paso a paso.
+            #     El modelo F5-TTS usa 32 pasos de "denoising" para generar el audio final.
+            #     """)
                 
-                with gr.Row():
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Entrada")
+            #     with gr.Row():
+            #         with gr.Column(scale=1):
+            #             gr.Markdown("### Entrada")
                         
-                        ref_audio_steps = gr.Audio(
-                            label="Audio de Referencia",
-                            type="filepath",
-                            sources=["upload", "microphone"]
-                        )
+            #             ref_audio_steps = gr.Audio(
+            #                 label="Audio de Referencia",
+            #                 type="filepath",
+            #                 sources=["upload", "microphone"]
+            #             )
                         
-                        ref_text_steps = gr.Textbox(
-                            label="Transcripción",
-                            lines=2
-                        )
+            #             ref_text_steps = gr.Textbox(
+            #                 label="Transcripción",
+            #                 lines=2
+            #             )
                         
-                        gen_text_steps = gr.Textbox(
-                            label="Texto a Generar",
-                            lines=3
-                        )
+            #             gen_text_steps = gr.Textbox(
+            #                 label="Texto a Generar",
+            #                 lines=3
+            #             )
                         
-                        language_steps = gr.Dropdown(
-                            choices=SUPPORTED_LANGUAGES,
-                            value="es",
-                            label="Idioma"
-                        )
+            #             language_steps = gr.Dropdown(
+            #                 choices=SUPPORTED_LANGUAGES,
+            #                 value="es",
+            #                 label="Idioma"
+            #             )
                         
-                        generate_steps_btn = gr.Button(
-                            "🔬 Generar con Captura de Pasos", 
-                            variant="primary"
-                        )
+            #             generate_steps_btn = gr.Button(
+            #                 "🔬 Generar con Captura de Pasos", 
+            #                 variant="primary"
+            #             )
                 
-                with gr.Row():
-                    status_steps = gr.Textbox(label="Estado", interactive=False)
+            #     with gr.Row():
+            #         status_steps = gr.Textbox(label="Estado", interactive=False)
                 
-                with gr.Row():
-                    gr.Markdown("### Audio Final")
-                    final_audio_output = gr.Audio(label="Resultado Final", type="numpy")
+            #     with gr.Row():
+            #         gr.Markdown("### Audio Final")
+            #         final_audio_output = gr.Audio(label="Resultado Final", type="numpy")
                 
-                gr.Markdown("### Pasos Intermedios del Denoising")
+            #     gr.Markdown("### Pasos Intermedios del Denoising")
                 
-                with gr.Row():
-                    step_slider = gr.Slider(
-                        minimum=0,
-                        maximum=4,
-                        value=4,
-                        step=1,
-                        label="Seleccionar Paso",
-                        info="0=Ruido inicial, 1=Paso 8, 2=Paso 16, 3=Paso 24, 4=Paso 32 (final)"
-                    )
+            #     with gr.Row():
+            #         step_slider = gr.Slider(
+            #             minimum=0,
+            #             maximum=4,
+            #             value=4,
+            #             step=1,
+            #             label="Seleccionar Paso",
+            #             info="0=Ruido inicial, 1=Paso 8, 2=Paso 16, 3=Paso 24, 4=Paso 32 (final)"
+            #         )
                 
-                with gr.Row():
-                    step_audio = gr.Audio(
-                        label="Audio en el Paso Seleccionado",
-                        type="numpy"
-                    )
+            #     with gr.Row():
+            #         step_audio = gr.Audio(
+            #             label="Audio en el Paso Seleccionado",
+            #             type="numpy"
+            #         )
                 
-                # Estado oculto para guardar todos los pasos
-                all_steps_state = gr.State(value=None)
+            #     # Estado oculto para guardar todos los pasos
+            #     all_steps_state = gr.State(value=None)
                 
-                def update_step_audio(step_index, all_steps):
-                    if all_steps is None:
-                        return None
-                    return all_steps[int(step_index)]
+            #     def update_step_audio(step_index, all_steps):
+            #         if all_steps is None:
+            #             return None
+            #         return all_steps[int(step_index)]
                 
-                # Generar y guardar pasos
-                def process_with_steps(ref_audio, ref_text, gen_text, lang):
-                    final, steps, status = generate_voice_with_steps(
-                        ref_audio, ref_text, gen_text, lang
-                    )
-                    # Retornar: audio final, todos los pasos (para state), último paso para mostrar, estado
-                    return final, steps, steps[-1] if steps else None, status
+            #     # Generar y guardar pasos
+            #     def process_with_steps(ref_audio, ref_text, gen_text, lang):
+            #         final, steps, status = generate_voice_with_steps(
+            #             ref_audio, ref_text, gen_text, lang
+            #         )
+            #         # Retornar: audio final, todos los pasos (para state), último paso para mostrar, estado
+            #         return final, steps, steps[-1] if steps else None, status
                 
-                generate_steps_btn.click(
-                    fn=process_with_steps,
-                    inputs=[ref_audio_steps, ref_text_steps, gen_text_steps, language_steps],
-                    outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
-                )
+            #     generate_steps_btn.click(
+            #         fn=process_with_steps,
+            #         inputs=[ref_audio_steps, ref_text_steps, gen_text_steps, language_steps],
+            #         outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
+            #     )
                 
-                step_slider.change(
-                    fn=update_step_audio,
-                    inputs=[step_slider, all_steps_state],
-                    outputs=[step_audio]
-                )
+            #     step_slider.change(
+            #         fn=update_step_audio,
+            #         inputs=[step_slider, all_steps_state],
+            #         outputs=[step_audio]
+            #     )
                 
-                gr.Markdown("""
-                ### 📊 Explicación de los Pasos
+            #     gr.Markdown("""
+            #     ### 📊 Explicación de los Pasos
                 
-                - **Paso 0 (Ruido)**: Ruido aleatorio puro - el punto de partida
-                - **Paso 8**: Primeras estructuras emergen, muy distorsionado
-                - **Paso 16**: Se distinguen patrones de habla, aún con artefactos
-                - **Paso 24**: Audio casi limpio, algunas imperfecciones
-                - **Paso 32 (Final)**: Audio completamente limpio y natural
+            #     - **Paso 0 (Ruido)**: Ruido aleatorio puro - el punto de partida
+            #     - **Paso 8**: Primeras estructuras emergen, muy distorsionado
+            #     - **Paso 16**: Se distinguen patrones de habla, aún con artefactos
+            #     - **Paso 24**: Audio casi limpio, algunas imperfecciones
+            #     - **Paso 32 (Final)**: Audio completamente limpio y natural
                 
-                Este proceso se llama "diffusion" - el modelo aprende a "limpiar" ruido gradualmente.
-                """)
+            #     Este proceso se llama "diffusion" - el modelo aprende a "limpiar" ruido gradualmente.
+            #     """)
         
         gr.Markdown("""
         ## 💡 Consejos para Mejores Resultados
