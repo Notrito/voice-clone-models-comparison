@@ -307,7 +307,7 @@ def create_interface():
             outputs=[output_audio, status_msg, time_msg]
         )
 
-     with gr.Tab("Visualización del Denoising"):
+    with gr.Tab("Visualización del Denoising"):
             gr.Markdown("""
             ## 🔬 Visualización del Proceso de Denoising
             
