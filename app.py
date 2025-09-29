@@ -110,22 +110,27 @@ def generate_voice(reference_audio, ref_text, gen_text, language):
     try:
         start_time = time.time()
         
-        from f5_tts.infer.utils_infer import infer_process
+        from f5_tts.infer.utils_infer import infer_process, preprocess_ref_audio_text
         
         print(f"🎤 Generando audio...")
         print(f"   Ref text: {ref_text[:50]}...")
         print(f"   Gen text: {gen_text[:50]}...")
         
-        # Procesar con F5-TTS
-        result = infer_process(
-            ref_audio=reference_audio,
-            ref_text=ref_text,
+        # Preprocesar audio de referencia
+        ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
+            reference_audio, 
+            ref_text
+        )
+        
+        # Procesar con F5-TTS (igual que el código oficial)
+        final_wave, final_sample_rate, combined_spectrogram = infer_process(
+            ref_audio=ref_audio_processed,
+            ref_text=ref_text_processed,
             gen_text=gen_text,
             model_obj=model,
             vocoder=vocoder,
             device="cpu"
         )
-        
         end_time = time.time()
         processing_time = end_time - start_time
         
