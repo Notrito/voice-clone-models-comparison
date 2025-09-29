@@ -140,7 +140,7 @@ def generate_voice(reference_audio, ref_text, gen_text, language):
         success_msg = f"✅ Audio generado exitosamente"
         time_msg = f"⏱️ Tiempo: {processing_time:.2f}s"
         
-        return output_path, success_msg, time_msg
+        return (final_sample_rate, final_wave), success_msg, time_msg
         
     except Exception as e:
         print(f"❌ Error en generación: {e}")
