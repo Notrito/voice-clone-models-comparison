@@ -148,6 +148,107 @@ def generate_voice(reference_audio, ref_text, gen_text, language):
         traceback.print_exc()
         return None, f"❌ Error: {str(e)}", ""
 
+def generate_voice_with_steps(reference_audio, ref_text, gen_text, language):
+    """Generar voz capturando pasos intermedios del denoising"""
+    
+    # Validar entrada
+    is_valid, msg = validate_audio(reference_audio)
+    if not is_valid:
+        return None, None, f"❌ {msg}"
+    
+    if not ref_text or not ref_text.strip():
+        return None, None, "❌ Debes escribir la transcripción del audio de referencia"
+    
+    if not gen_text or not gen_text.strip():
+        return None, None, "❌ Debes escribir el texto a generar"
+    
+    # Verificar que los modelos estén cargados
+    if not model_loaded:
+        success = load_models()
+        if not success:
+            return None, None, "❌ Error cargando modelos"
+    
+    try:
+        import torch
+        import torchaudio
+        from f5_tts.infer.utils_infer import preprocess_ref_audio_text, convert_char_to_pinyin
+        
+        print("🔬 Generando con captura de pasos intermedios...")
+        
+        # Preprocesar
+        ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
+            reference_audio, 
+            ref_text
+        )
+        
+        # Cargar y procesar audio
+        audio, sr = torchaudio.load(ref_audio_processed)
+        if audio.shape[0] > 1:
+            audio = torch.mean(audio, dim=0, keepdim=True)
+        
+        # Resamplear si es necesario
+        if sr != 24000:
+            resampler = torchaudio.transforms.Resample(sr, 24000)
+            audio = resampler(audio)
+        
+        audio = audio.to("cpu")
+        
+        # Preparar texto
+        text_list = [ref_text_processed + gen_text]
+        final_text_list = convert_char_to_pinyin(text_list)
+        
+        # Calcular duración
+        ref_audio_len = audio.shape[-1] // 256  # hop_length
+        ref_text_len = len(ref_text_processed.encode("utf-8"))
+        gen_text_len = len(gen_text.encode("utf-8"))
+        duration = ref_audio_len + int(ref_audio_len / ref_text_len * gen_text_len)
+        
+        # Generar CON trajectory
+        print("Llamando a model.sample() con captura de trajectory...")
+        with torch.inference_mode():
+            generated_mel, trajectory = model.sample(
+                cond=audio,
+                text=final_text_list,
+                duration=duration,
+                steps=32,
+                cfg_strength=2.0,
+                sway_sampling_coef=-1.0,
+            )
+        
+        print(f"Trajectory capturado - Shape: {trajectory.shape}")
+        
+        # Extraer pasos específicos para mostrar
+        steps_to_extract = [0, 8, 16, 24, 32]
+        step_audios = []
+        
+        for step_idx in steps_to_extract:
+            print(f"Procesando paso {step_idx}/32...")
+            mel_at_step = trajectory[step_idx]
+            
+            # Recortar parte de referencia y permutar
+            mel_generated = mel_at_step[:, ref_audio_len:, :]
+            mel_generated = mel_generated.permute(0, 2, 1)
+            
+            # Convertir a audio con vocoder
+            audio_at_step = vocoder.decode(mel_generated)
+            audio_np = audio_at_step.squeeze().cpu().numpy()
+            
+            step_audios.append((24000, audio_np))
+        
+        # El último paso es el audio final
+        final_audio = step_audios[-1]
+        
+        print("✅ Generación con pasos completada")
+        
+        # Retornar: audio final, lista de pasos, mensaje
+        return final_audio, step_audios, f"✅ Generado con captura de {len(steps_to_extract)} pasos intermedios"
+        
+    except Exception as e:
+        print(f"❌ Error en generación con pasos: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, None, f"❌ Error: {str(e)}"
+        
 # Crear interfaz Gradio
 def create_interface():
     with gr.Blocks(
@@ -205,6 +306,98 @@ def create_interface():
             inputs=[reference_audio, ref_text, gen_text, language],
             outputs=[output_audio, status_msg, time_msg]
         )
+
+         with gr.Tab("Visualización del Denoising"):
+                gr.Markdown("""
+                ## 🔬 Visualización del Proceso de Denoising
+                
+                Esta sección te permite ver cómo el modelo transforma ruido puro en audio limpio paso a paso.
+                El modelo F5-TTS usa 32 pasos de "denoising" para generar el audio final.
+                """)
+                
+                with gr.Row():
+                    with gr.Column(scale=1):
+                        gr.Markdown("### Entrada")
+                        
+                        ref_audio_steps = gr.Audio(
+                            label="Audio de Referencia",
+                            type="filepath",
+                            sources=["upload", "microphone"]
+                        )
+                        
+                        ref_text_steps = gr.Textbox(
+                            label="Transcripción",
+                            lines=2
+                        )
+                        
+                        gen_text_steps = gr.Textbox(
+                            label="Texto a Generar",
+                            lines=3
+                        )
+                        
+                        language_steps = gr.Dropdown(
+                            choices=SUPPORTED_LANGUAGES,
+                            value="es",
+                            label="Idioma"
+                        )
+                        
+                        generate_steps_btn = gr.Button(
+                            "🔬 Generar con Captura de Pasos", 
+                            variant="primary"
+                        )
+                
+                with gr.Row():
+                    status_steps = gr.Textbox(label="Estado", interactive=False)
+                
+                with gr.Row():
+                    gr.Markdown("### Audio Final")
+                    final_audio_output = gr.Audio(label="Resultado Final", type="numpy")
+                
+                gr.Markdown("### Pasos Intermedios del Denoising")
+                
+                with gr.Row():
+                    step_slider = gr.Slider(
+                        minimum=0,
+                        maximum=4,
+                        value=4,
+                        step=1,
+                        label="Seleccionar Paso",
+                        info="0=Ruido inicial, 1=Paso 8, 2=Paso 16, 3=Paso 24, 4=Paso 32 (final)"
+                    )
+                
+                with gr.Row():
+                    step_audio = gr.Audio(
+                        label="Audio en el Paso Seleccionado",
+                        type="numpy"
+                    )
+                
+                # Estado oculto para guardar todos los pasos
+                all_steps_state = gr.State(value=None)
+                
+                def update_step_audio(step_index, all_steps):
+                    if all_steps is None:
+                        return None
+                    return all_steps[int(step_index)]
+                
+                # Generar y guardar pasos
+                def process_with_steps(ref_audio, ref_text, gen_text, lang):
+                    final, steps, status = generate_voice_with_steps(
+                        ref_audio, ref_text, gen_text, lang
+                    )
+                    # Retornar: audio final, todos los pasos (para state), último paso para mostrar, estado
+                    return final, steps, steps[-1] if steps else None, status
+                
+                generate_steps_btn.click(
+                    fn=process_with_steps,
+                    inputs=[ref_audio_steps, ref_text_steps, gen_text_steps, language_steps],
+                    outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
+                )
+                
+                step_slider.change(
+                    fn=update_step_audio,
+                    inputs=[step_slider, all_steps_state],
+                    outputs=[step_audio]
+                )
         
         gr.Markdown("""
         ## 💡 Consejos para Mejores Resultados
