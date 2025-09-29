@@ -24,9 +24,10 @@ def load_models():
         print("⏳ Cargando F5-TTS y vocoder...")
         print("=" * 50)
         
-        # Usar la API simplificada de F5-TTS
-        from f5_tts.infer.utils_infer import load_vocoder, load_checkpoint
-        from f5_tts.model.backbones.dit import DiT
+        import json
+        from cached_path import cached_path
+        from f5_tts.infer.utils_infer import load_model, load_vocoder
+        from f5_tts.model import DiT
         
         # Cargar vocoder primero
         print("📥 Cargando vocoder Vocos...")
@@ -37,17 +38,24 @@ def load_models():
         )
         print("✅ Vocoder cargado correctamente")
         
-        # Cargar modelo F5-TTS usando DiT (la arquitectura correcta)
-        print("\n📥 Cargando modelo F5-TTS...")
-        print("Usando modelo: F5-TTS Base")
+        # Configuración del modelo (copiado del código oficial)
+        print("\n📥 Cargando modelo F5-TTS v1 Base...")
         
-        model = load_checkpoint(
-            model_cls=DiT,  # Usar DiT en lugar de CFM
-            ckpt_path="hf://SWivid/F5-TTS",
-            vocab_file="",
-            ode_method="euler",
-            use_ema=True,
-            device="cpu"
+        ckpt_path = str(cached_path("hf://SWivid/F5-TTS/F5TTS_v1_Base/model_1250000.safetensors"))
+        model_cfg = dict(
+            dim=1024, 
+            depth=22, 
+            heads=16, 
+            ff_mult=2, 
+            text_dim=512, 
+            conv_layers=4
+        )
+        
+        # Cargar modelo usando la misma función que el código oficial
+        model = load_model(
+            DiT,
+            model_cfg,
+            ckpt_path
         )
         print("✅ Modelo F5-TTS cargado correctamente")
         
