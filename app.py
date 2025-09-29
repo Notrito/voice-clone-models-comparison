@@ -22,36 +22,48 @@ def load_models():
     
     try:
         print("⏳ Cargando F5-TTS y vocoder...")
+        print("=" * 50)
         
-        from f5_tts.infer.utils_infer import load_model, load_vocoder
-        from f5_tts.model.cfm import CFM
+        # Usar la API simplificada de F5-TTS
+        from f5_tts.infer.utils_infer import load_vocoder, load_checkpoint
+        from f5_tts.model.backbones.dit import DiT
         
-        # Cargar vocoder
-        print("📥 Descargando vocoder (puede tardar la primera vez)...")
+        # Cargar vocoder primero
+        print("📥 Cargando vocoder Vocos...")
         vocoder = load_vocoder(
             vocoder_name="vocos",
             is_local=False,
-            device="cpu"  # HF Space CPU
-        )
-        print("✅ Vocoder cargado")
-        
-        # Cargar modelo F5-TTS
-        print("📥 Descargando modelo F5-TTS...")
-        model = load_model(
-            model_cls=CFM,
-            model_cfg={},  # Configuración por defecto
-            ckpt_path="",  # Se descarga automáticamente de HF
             device="cpu"
         )
-        print("✅ Modelo F5-TTS cargado")
+        print("✅ Vocoder cargado correctamente")
+        
+        # Cargar modelo F5-TTS usando DiT (la arquitectura correcta)
+        print("\n📥 Cargando modelo F5-TTS...")
+        print("Usando modelo: F5-TTS Base")
+        
+        model = load_checkpoint(
+            model_cls=DiT,  # Usar DiT en lugar de CFM
+            ckpt_path="hf://SWivid/F5-TTS",
+            vocab_file="",
+            ode_method="euler",
+            use_ema=True,
+            device="cpu"
+        )
+        print("✅ Modelo F5-TTS cargado correctamente")
         
         model_loaded = True
+        print("\n" + "=" * 50)
+        print("✅ Todos los modelos cargados exitosamente")
         return True
         
     except Exception as e:
-        print(f"❌ Error cargando modelos: {e}")
+        print(f"\n❌ ERROR CRÍTICO cargando modelos:")
+        print(f"   Tipo: {type(e).__name__}")
+        print(f"   Mensaje: {str(e)}")
         import traceback
+        print("\nStack trace completo:")
         traceback.print_exc()
+        print("=" * 50)
         return False
 
 def validate_audio(audio_file):
