@@ -385,8 +385,11 @@ def create_interface():
                     final, steps, status = generate_voice_with_steps(
                         ref_audio, ref_text, gen_text, lang
                     )
-                    # Retornar: audio final, todos los pasos (para state), último paso para mostrar, estado
-                    return final, steps, steps[-1] if steps else None, status
+                    # Solo devolver 4 valores si steps existe
+                    if steps:
+                        return final, steps, steps[-1], status
+                    else:
+                        return None, None, None, status
                 
                 generate_steps_btn.click(
                     fn=process_with_steps,
