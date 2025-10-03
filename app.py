@@ -296,9 +296,6 @@ def create_interface():
         with gr.Row():
             status_steps = gr.Textbox(label="Status", interactive=False)
         
-        gr.Markdown("### Final Audio ")
-        final_audio_output = gr.Audio(label="Final Result", type="numpy")
-        
         gr.Markdown("### Intermediate Denoising Steps")
         
         with gr.Row():
