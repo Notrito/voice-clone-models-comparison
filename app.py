@@ -254,15 +254,14 @@ def create_interface():
         theme=gr.themes.Soft()
     ) as demo:
         
-        gr.Markdown("# 🎤 F5-TTS Voice Cloning")
-        gr.Markdown("Clone any voice with just 5-30 seconds of reference audio")
+        gr.Markdown("# 🎤 F5-TTS Voice Cloning and 🔬 Denoising Process Visualization")
+        gr.Markdown("Clone any voice with just 5-30 seconds of reference audio and see how noise transforms into speech step by step.")
         gr.Markdown("Developed by Noel Triguero. Model by SWivid")
         gr.Markdown("---")
 
         gr.Markdown("""
-        ## 🔬 Denoising Process Visualization
-        
-        This section lets you see how the model transforms pure noise into clean audio step by step.
+        ## 
+        See how the model transforms pure noise into clean audio step by step.
         The F5-TTS model uses 32 "denoising" steps to generate the final audio.
         """)
 
@@ -348,28 +347,28 @@ def create_interface():
             inputs=[step_slider, all_steps_state],
             outputs=[step_audio]
         )
-                
-    gr.Markdown("<br>")  # Espacio arriba
+                    
+        gr.Markdown("<br>")  # Espacio arriba
 
-    gr.Markdown("""
-    ---
-    ## 💡 Tips for Better Results
+        gr.Markdown("""
+        ---
+        ## 💡 Tips for Better Results
 
-    **Clean audio:** No background noise, music or echo  
-    **Duration:** 5-30 seconds is ideal  
-    **Exact transcription:** The transcription must match the audio exactly  
-    **Clear speech:** Constant volume and clear pronunciation  
-    **Language:** Reference audio and text can be in different languages
+        **Clean audio:** No background noise, music or echo  
+        **Duration:** 5-30 seconds is ideal  
+        **Exact transcription:** The transcription must match the audio exactly  
+        **Clear speech:** Constant volume and clear pronunciation  
+        **Language:** Reference audio and text can be in different languages
 
-    ---
-    ## 🔧 Technical Information
+        ---
+        ## 🔧 Technical Information
 
-    **Model:** F5-TTS (Flow Matching Text-to-Speech)  
-    **Vocoder:** Vocos  
-    **Device:** CPU (may take ~30-60 seconds)
+        **Model:** F5-TTS (Flow Matching Text-to-Speech)  
+        **Vocoder:** Vocos  
+        **Device:** CPU (may take ~30-60 seconds)
 
-    ---
-    """)
+        ---
+        """)
     
     return demo
 
