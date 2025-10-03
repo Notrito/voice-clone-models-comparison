@@ -91,64 +91,64 @@ def validate_audio(audio_file):
     except Exception as e:
         return False, f"Error validating audio: {e}"
 
-def generate_voice(reference_audio, ref_text, gen_text):
-    """Generate voice with F5-TTS"""
+# def generate_voice(reference_audio, ref_text, gen_text):
+#     """Generate voice with F5-TTS"""
     
-    # Validate input
-    is_valid, msg = validate_audio(reference_audio)
-    if not is_valid:
-        return None, f"❌ {msg}", ""
+#     # Validate input
+#     is_valid, msg = validate_audio(reference_audio)
+#     if not is_valid:
+#         return None, f"❌ {msg}", ""
     
-    if not ref_text or not ref_text.strip():
-        return None, "❌ You must write the transcription of the reference audio", ""
+#     if not ref_text or not ref_text.strip():
+#         return None, "❌ You must write the transcription of the reference audio", ""
     
-    if not gen_text or not gen_text.strip():
-        return None, "❌ You must write the text to generate", ""
+#     if not gen_text or not gen_text.strip():
+#         return None, "❌ You must write the text to generate", ""
     
-    # Check that models are loaded
-    if not model_loaded:
-        success = load_models()
-        if not success:
-            return None, "❌ Error loading models. Try reloading the page.", ""
+#     # Check that models are loaded
+#     if not model_loaded:
+#         success = load_models()
+#         if not success:
+#             return None, "❌ Error loading models. Try reloading the page.", ""
     
-    try:
-        start_time = time.time()
+#     try:
+#         start_time = time.time()
            
-        print(f"🎤 Generating audio...")
-        print(f"   Ref text: {ref_text[:50]}...")
-        print(f"   Gen text: {gen_text[:50]}...")
+#         print(f"🎤 Generating audio...")
+#         print(f"   Ref text: {ref_text[:50]}...")
+#         print(f"   Gen text: {gen_text[:50]}...")
         
-        # Preprocess reference audio
-        ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
-            reference_audio, 
-            ref_text
-        )
+#         # Preprocess reference audio
+#         ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
+#             reference_audio, 
+#             ref_text
+#         )
         
-        # Process with F5-TTS (same as official code)
-        final_wave, final_sample_rate, combined_spectrogram = infer_process(
-            ref_audio=ref_audio_processed,
-            ref_text=ref_text_processed,
-            gen_text=gen_text,
-            model_obj=model,
-            vocoder=vocoder,
-            device="cpu"
-        )
-        end_time = time.time()
-        processing_time = end_time - start_time
+#         # Process with F5-TTS (same as official code)
+#         final_wave, final_sample_rate, combined_spectrogram = infer_process(
+#             ref_audio=ref_audio_processed,
+#             ref_text=ref_text_processed,
+#             gen_text=gen_text,
+#             model_obj=model,
+#             vocoder=vocoder,
+#             device="cpu"
+#         )
+#         end_time = time.time()
+#         processing_time = end_time - start_time
         
-        # result should be the generated audio
-        output_path = "generated_audio.wav"
+#         # result should be the generated audio
+#         output_path = "generated_audio.wav"
         
-        success_msg = f"✅ Audio generated successfully"
-        time_msg = f"⏱️ Time: {processing_time:.2f}s"
+#         success_msg = f"✅ Audio generated successfully"
+#         time_msg = f"⏱️ Time: {processing_time:.2f}s"
         
-        return (final_sample_rate, final_wave), success_msg, time_msg
+#         return (final_sample_rate, final_wave), success_msg, time_msg
         
-    except Exception as e:
-        print(f"❌ Error in generation: {e}")
-        import traceback
-        traceback.print_exc()
-        return None, f"❌ Error: {str(e)}", ""
+#     except Exception as e:
+#         print(f"❌ Error in generation: {e}")
+#         import traceback
+#         traceback.print_exc()
+#         return None, f"❌ Error: {str(e)}", ""
 
 def generate_voice_with_steps(reference_audio, ref_text, gen_text):
     """Generate voice capturing intermediate denoising steps"""
@@ -216,7 +216,7 @@ def generate_voice_with_steps(reference_audio, ref_text, gen_text):
         print(f"Trajectory captured - Shape: {trajectory.shape}")
         
         # Extract specific steps to display
-        steps_to_extract = [0, 8, 16, 24, 32]
+        steps_to_extract = [0, 12, 20, 26, 32]
         step_audios = []
         
         for step_idx in steps_to_extract:
@@ -308,7 +308,7 @@ def create_interface():
                 value=4,
                 step=1,
                 label="Select Step",
-                info="0=Initial noise, 1=Step 8, 2=Step 16, 3=Step 24, 4=Step 32 (final)"
+                info="0=Initial noise, 1=Step 12, 2=Step 20, 3=Step 26, 4=Step 32 (final)\n (First 10 steps are noise for humans)"
             )
         
         with gr.Row():
