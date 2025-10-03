@@ -276,27 +276,29 @@ def create_interface():
                     sources=["upload", "microphone"]
                 )
                 
-                ref_text_steps = gr.Textbox(
-                    label="Transcription",
-                    lines=2
-                )
-                
-                gen_text_steps = gr.Textbox(
-                    label="Text to Generate",
-                    lines=3
-                )
-                
-                generate_steps_btn = gr.Button(
-                    "🔬 Generate with Step Capture", 
-                    variant="primary"
-                )
+        with gr.Row():
+            ref_text_steps = gr.Textbox(
+                label="Transcription",
+                lines=2,
+                scale=1
+            )
+            
+            gen_text_steps = gr.Textbox(
+                label="Text to Generate",
+                lines=3,
+                scale=1
+            )
+        with gr.Row():
+            generate_steps_btn = gr.Button(
+                "🔬 Generate with Step Capture", 
+                variant="primary"
+            )
         
         with gr.Row():
             status_steps = gr.Textbox(label="Status", interactive=False)
         
-        with gr.Row():
-            gr.Markdown("### Final Audio ")
-            final_audio_output = gr.Audio(label="Final Result", type="numpy")
+        gr.Markdown("### Final Audio ")
+        final_audio_output = gr.Audio(label="Final Result", type="numpy")
         
         gr.Markdown("### Intermediate Denoising Steps")
         
@@ -347,30 +349,24 @@ def create_interface():
             outputs=[step_audio]
         )
                 
-        gr.Markdown("""
-        ### 📊 Step Explanation
-        
-        - **Step 0 (Noise)**: Pure random noise - the starting point
-        - **Step 8**: First structures emerge, very distorted
-        - **Step 16**: Speech patterns distinguishable, still with artifacts
-        - **Step 24**: Almost clean audio, some imperfections
-        - **Step 32 (Final)**: Completely clean and natural audio
-        
-        This process is called "diffusion" - the model learns to "clean" noise gradually.
-        """)
-        gr.Markdown("""
-        ## 💡 Tips for Better Results
-        
-        - **Clean audio:** No background noise, music or echo
-        - **Duration:** 5-30 seconds is ideal
-        - **Exact transcription:** The transcription must match the audio exactly
-        - **Clear speech:** Constant volume and clear pronunciation
-        
-        ## 🔧 Technical Information
-        
-        - **Model:** F5-TTS (Flow Matching Text-to-Speech)
-        - **Vocoder:** Vocos
-        - **Device:** CPU (may take ~30-60 seconds)
+        gr.HTML("""
+        <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin-top: 20px;">
+            <h2 style="margin-top: 0;">💡 Tips for Better Results</h2>
+            <ul style="line-height: 1.8;">
+                <li><strong>Clean audio:</strong> No background noise, music or echo</li>
+                <li><strong>Duration:</strong> 5-30 seconds is ideal</li>
+                <li><strong>Exact transcription:</strong> The transcription must match the audio exactly</li>
+                <li><strong>Clear speech:</strong> Constant volume and clear pronunciation</li>
+                <li><strong>Language:</strong> Reference audio and text can be in different languages</li>
+            </ul>
+            
+            <h2>🔧 Technical Information</h2>
+            <ul style="line-height: 1.8;">
+                <li><strong>Model:</strong> F5-TTS (Flow Matching Text-to-Speech)</li>
+                <li><strong>Vocoder:</strong> Vocos</li>
+                <li><strong>Device:</strong> CPU (may take ~30-60 seconds)</li>
+            </ul>
+        </div>
         """)
     
     return demo
