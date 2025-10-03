@@ -259,151 +259,105 @@ def create_interface():
         gr.Markdown("Developed by Noel Triguero. Model by SWivid")
         gr.Markdown("---")
 
-        with gr.Tabs():
-            # Tab 1: Generación básica
-            with gr.Tab("Basic Generation"):
-                with gr.Row():
-                    with gr.Column(scale=1):
-                        gr.Markdown("## 📁 Input")
-                        
-                        reference_audio = gr.Audio(
-                            label="Reference Audio (5-30 segundos)",
-                            type="filepath",
-                            sources=["upload", "microphone"]
-                        )
-                        
-                        ref_text = gr.Textbox(
-                            label="Reference Audio Transcription",
-                            placeholder="Write exactly what the reference audio says...",
-                            lines=2,
-                            info="Important: Must match what the audio says"
-                        )
-                        
-                        gen_text = gr.Textbox(
-                            label="Text to Generate",
-                            placeholder="Write the text you want to say with the cloned voice...",
-                            lines=3
-                        )
-                        
-                        
-                        generate_btn = gr.Button("🚀 Generate Voice", variant="primary", size="lg")
+        gr.Markdown("""
+        ## 🔬 Denoising Process Visualization
+        
+        This section lets you see how the model transforms pure noise into clean audio step by step.
+        The F5-TTS model uses 32 "denoising" steps to generate the final audio.
+        """)
+
+        with gr.Row():
+            with gr.Column(scale=1):
+                gr.Markdown("### Input")
                 
-                with gr.Row():
-                    status_msg = gr.Textbox(label="Status", interactive=False, show_label=False)
-                
-                with gr.Row():
-                    time_msg = gr.Textbox(label="Processing Time", interactive=False)
-                
-                with gr.Row():
-                    output_audio = gr.Audio(label="🔊 Generated Audio", type="filepath")
-                 
-                generate_btn.click(
-                    fn=generate_voice,
-                    inputs=[reference_audio, ref_text, gen_text],
-                    outputs=[output_audio, status_msg, time_msg]
-                )
-            
-            # Tab 2: Visualización del proceso de denoising
-            with gr.Tab("Denoising Visualization"):
-                gr.Markdown("""
-                ## 🔬 Denoising Process Visualization
-                
-                This section lets you see how the model transforms pure noise into clean audio step by step.
-                The F5-TTS model uses 32 "denoising" steps to generate the final audio.
-                """)
-      
-                with gr.Row():
-                    with gr.Column(scale=1):
-                        gr.Markdown("### Input")
-                        
-                        ref_audio_steps = gr.Audio(
-                            label="Reference Audio",
-                            type="filepath",
-                            sources=["upload", "microphone"]
-                        )
-                        
-                        ref_text_steps = gr.Textbox(
-                            label="Transcription",
-                            lines=2
-                        )
-                        
-                        gen_text_steps = gr.Textbox(
-                            label="Text to Generate",
-                            lines=3
-                        )
-                        
-                        generate_steps_btn = gr.Button(
-                            "🔬 Generate with Step Capture", 
-                            variant="primary"
-                        )
-                
-                with gr.Row():
-                    status_steps = gr.Textbox(label="Status", interactive=False)
-                
-                with gr.Row():
-                    gr.Markdown("### Final Audio ")
-                    final_audio_output = gr.Audio(label="Final Result", type="numpy")
-                
-                gr.Markdown("### Intermediate Denoising Steps")
-                
-                with gr.Row():
-                    step_slider = gr.Slider(
-                        minimum=0,
-                        maximum=4,
-                        value=4,
-                        step=1,
-                        label="Select Step",
-                        info="0=Initial noise, 1=Step 8, 2=Step 16, 3=Step 24, 4=Step 32 (final)"
-                    )
-                
-                with gr.Row():
-                    step_audio = gr.Audio(
-                        label="Audio at Selected Step",
-                        type="numpy"
-                    )
-                
-                # Hiden state to store all steps
-                all_steps_state = gr.State(value=None)
-                
-                def update_step_audio(step_index, all_steps):
-                    if all_steps is None:
-                        return None
-                    return all_steps[int(step_index)]
-                
-                # Generate with steps and store all steps in state
-                def process_with_steps(ref_audio, ref_text, gen_text):
-                    final, steps, status = generate_voice_with_steps(
-                        ref_audio, ref_text, gen_text
-                    )
-                    # Only return the last step audio for the slider
-                    if steps:
-                        return final, steps, steps[-1], status
-                    else:
-                        return None, None, None, status
-                
-                generate_steps_btn.click(
-                    fn=process_with_steps,
-                    inputs=[ref_audio_steps, ref_text_steps, gen_text_steps],
-                    outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
+                ref_audio_steps = gr.Audio(
+                    label="Reference Audio",
+                    type="filepath",
+                    sources=["upload", "microphone"]
                 )
                 
-                step_slider.change(
-                    fn=update_step_audio,
-                    inputs=[step_slider, all_steps_state],
-                    outputs=[step_audio]
+                ref_text_steps = gr.Textbox(
+                    label="Transcription",
+                    lines=2
                 )
-                       
-                gr.Markdown("""
-                ### 📊 Step Explanation
                 
-                - **Step 0 (Noise)**: Pure random noise - the starting point
-                - **Step 8**: First structures emerge, very distorted
-                - **Step 16**: Speech patterns distinguishable, still with artifacts
-                - **Step 24**: Almost clean audio, some imperfections
-                - **Step 32 (Final)**: Completely clean and natural audio
+                gen_text_steps = gr.Textbox(
+                    label="Text to Generate",
+                    lines=3
+                )
                 
-                This process is called "diffusion" - the model learns to "clean" noise gradually.
-                """)
+                generate_steps_btn = gr.Button(
+                    "🔬 Generate with Step Capture", 
+                    variant="primary"
+                )
+        
+        with gr.Row():
+            status_steps = gr.Textbox(label="Status", interactive=False)
+        
+        with gr.Row():
+            gr.Markdown("### Final Audio ")
+            final_audio_output = gr.Audio(label="Final Result", type="numpy")
+        
+        gr.Markdown("### Intermediate Denoising Steps")
+        
+        with gr.Row():
+            step_slider = gr.Slider(
+                minimum=0,
+                maximum=4,
+                value=4,
+                step=1,
+                label="Select Step",
+                info="0=Initial noise, 1=Step 8, 2=Step 16, 3=Step 24, 4=Step 32 (final)"
+            )
+        
+        with gr.Row():
+            step_audio = gr.Audio(
+                label="Audio at Selected Step",
+                type="numpy"
+            )
+        
+        # Hiden state to store all steps
+        all_steps_state = gr.State(value=None)
+        
+        def update_step_audio(step_index, all_steps):
+            if all_steps is None:
+                return None
+            return all_steps[int(step_index)]
+        
+        # Generate with steps and store all steps in state
+        def process_with_steps(ref_audio, ref_text, gen_text):
+            final, steps, status = generate_voice_with_steps(
+                ref_audio, ref_text, gen_text
+            )
+            # Only return the last step audio for the slider
+            if steps:
+                return final, steps, steps[-1], status
+            else:
+                return None, None, None, status
+        
+        generate_steps_btn.click(
+            fn=process_with_steps,
+            inputs=[ref_audio_steps, ref_text_steps, gen_text_steps],
+            outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
+        )
+        
+        step_slider.change(
+            fn=update_step_audio,
+            inputs=[step_slider, all_steps_state],
+            outputs=[step_audio]
+        )
+                
+        gr.Markdown("""
+        ### 📊 Step Explanation
+        
+        - **Step 0 (Noise)**: Pure random noise - the starting point
+        - **Step 8**: First structures emerge, very distorted
+        - **Step 16**: Speech patterns distinguishable, still with artifacts
+        - **Step 24**: Almost clean audio, some imperfections
+        - **Step 32 (Final)**: Completely clean and natural audio
+        
+        This process is called "diffusion" - the model learns to "clean" noise gradually.
+        """)
         gr.Markdown("""
         ## 💡 Tips for Better Results
         
