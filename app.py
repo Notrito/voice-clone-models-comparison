@@ -329,9 +329,9 @@ def create_interface():
             )
             # Only return the last step audio for the slider
             if steps:
-                return final, steps, steps[-1], status
+                return steps, steps[-1], status
             else:
-                return None, None, None, status
+                return None, None, status
         
         generate_steps_btn.click(
             fn=process_with_steps,
