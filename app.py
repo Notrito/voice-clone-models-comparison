@@ -349,25 +349,27 @@ def create_interface():
             outputs=[step_audio]
         )
                 
-        gr.HTML("""
-        <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin-top: 20px; color: #000000;">
-            <h2 style="margin-top: 0; color: #000000;">💡 Tips for Better Results</h2>
-            <ul style="line-height: 1.8;">
-                <li style="color: #000000 !important;"><strong>Clean audio:</strong> No background noise, music or echo</li>
-                <li style="color: #000000 !important;"><strong>Duration:</strong> 5-30 seconds is ideal</li>
-                <li style="color: #000000 !important;"><strong>Exact transcription:</strong> The transcription must match the audio exactly</li>
-                <li style="color: #000000 !important;"><strong>Clear speech:</strong> Constant volume and clear pronunciation</li>
-                <li style="color: #000000 !important;"><strong>Language:</strong> Reference audio and text can be in different languages</li>
-            </ul>
-            
-            <h2 style="color: #000000;">🔧 Technical Information</h2>
-            <ul style="line-height: 1.8; color: #000000;">
-                <li style="color: #000000 !important;"><strong>Model:</strong> F5-TTS (Flow Matching Text-to-Speech)</li>
-                <li style="color: #000000 !important;"><strong>Vocoder:</strong> Vocos</li>
-                <li style="color: #000000 !important;"><strong>Device:</strong> CPU (may take ~30-60 seconds)</li>
-            </ul>
-        </div>
-        """)
+    gr.Markdown("<br>")  # Espacio arriba
+
+    gr.Markdown("""
+    ---
+    ## 💡 Tips for Better Results
+
+    **Clean audio:** No background noise, music or echo  
+    **Duration:** 5-30 seconds is ideal  
+    **Exact transcription:** The transcription must match the audio exactly  
+    **Clear speech:** Constant volume and clear pronunciation  
+    **Language:** Reference audio and text can be in different languages
+
+    ---
+    ## 🔧 Technical Information
+
+    **Model:** F5-TTS (Flow Matching Text-to-Speech)  
+    **Vocoder:** Vocos  
+    **Device:** CPU (may take ~30-60 seconds)
+
+    ---
+    """)
     
     return demo
 
