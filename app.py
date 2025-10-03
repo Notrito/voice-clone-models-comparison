@@ -14,7 +14,7 @@ from f5_tts.infer.utils_infer import preprocess_ref_audio_text, convert_char_to_
 
 # Configuración
 MODEL_NAME = "F5-TTS"
-SUPPORTED_LANGUAGES = ["es", "en"]
+SUPPORTED_LANGUAGES = ["en", "es"]
 MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Variables globales para el modelo (se cargan una vez)
@@ -23,27 +23,27 @@ vocoder = None
 model_loaded = False
 
 def load_models():
-    """Cargar F5-TTS y vocoder (solo una vez al iniciar)"""
+    """Load F5-TTS and vocoder (only once at startup)"""
     global model, vocoder, model_loaded
     
     if model_loaded:
         return True
     
     try:
-        print("⏳ Cargando F5-TTS y vocoder...")
+        print("⏳ Loading F5-TTS and vocoder...")
         print("=" * 50)
         
-        # Cargar vocoder primero
-        print("📥 Cargando vocoder Vocos...")
+        # Load vocoder first
+        print("🔥 Loading Vocos vocoder...")
         vocoder = load_vocoder(
             vocoder_name="vocos",
             is_local=False,
             device="cpu"
         )
-        print("✅ Vocoder cargado correctamente")
+        print("✅ Vocoder loaded successfully")
         
-        # Configuración del modelo (copiado del código oficial)
-        print("\n📥 Cargando modelo F5-TTS v1 Base...")
+        # Model configuration (copied from official code)
+        print("\n🔥 Loading F5-TTS v1 Base model...")
         
         ckpt_path = str(cached_path("hf://SWivid/F5-TTS/F5TTS_v1_Base/model_1250000.safetensors"))
         model_cfg = dict(
@@ -55,76 +55,76 @@ def load_models():
             conv_layers=4
         )
         
-        # Cargar modelo usando la misma función que el código oficial
+        # Load model using the same function as the official code
         model = load_model(
             DiT,
             model_cfg,
             ckpt_path
         )
-        print("✅ Modelo F5-TTS cargado correctamente")
+        print("✅ F5-TTS model loaded successfully")
         
         model_loaded = True
         print("\n" + "=" * 50)
-        print("✅ Todos los modelos cargados exitosamente")
+        print("✅ All models loaded successfully")
         return True
         
     except Exception as e:
-        print(f"\n❌ ERROR CRÍTICO cargando modelos:")
-        print(f"   Tipo: {type(e).__name__}")
-        print(f"   Mensaje: {str(e)}")
+        print(f"\n❌ CRITICAL ERROR loading models:")
+        print(f"   Type: {type(e).__name__}")
+        print(f"   Message: {str(e)}")
         import traceback
-        print("\nStack trace completo:")
+        print("\nFull stack trace:")
         traceback.print_exc()
         print("=" * 50)
         return False
 
 def validate_audio(audio_file):
-    """Validar archivo de audio"""
+    """Validate audio file"""
     if audio_file is None:
-        return False, "Por favor, sube un archivo de audio"
+        return False, "Please upload an audio file"
     
     try:
         file_size = os.path.getsize(audio_file)
         if file_size > MAX_AUDIO_SIZE:
-            return False, f"Archivo muy grande. Máximo 10MB"
-        return True, "Audio válido"
+            return False, f"File too large. Maximum 10MB"
+        return True, "Valid audio"
     except Exception as e:
-        return False, f"Error validando audio: {e}"
+        return False, f"Error validating audio: {e}"
 
 def generate_voice(reference_audio, ref_text, gen_text, language):
-    """Generar voz con F5-TTS"""
+    """Generate voice with F5-TTS"""
     
-    # Validar entrada
+    # Validate input
     is_valid, msg = validate_audio(reference_audio)
     if not is_valid:
         return None, f"❌ {msg}", ""
     
     if not ref_text or not ref_text.strip():
-        return None, "❌ Debes escribir la transcripción del audio de referencia", ""
+        return None, "❌ You must write the transcription of the reference audio", ""
     
     if not gen_text or not gen_text.strip():
-        return None, "❌ Debes escribir el texto a generar", ""
+        return None, "❌ You must write the text to generate", ""
     
-    # Verificar que los modelos estén cargados
+    # Check that models are loaded
     if not model_loaded:
         success = load_models()
         if not success:
-            return None, "❌ Error cargando modelos. Intenta recargar la página.", ""
+            return None, "❌ Error loading models. Try reloading the page.", ""
     
     try:
         start_time = time.time()
            
-        print(f"🎤 Generando audio...")
+        print(f"🎤 Generating audio...")
         print(f"   Ref text: {ref_text[:50]}...")
         print(f"   Gen text: {gen_text[:50]}...")
         
-        # Preprocesar audio de referencia
+        # Preprocess reference audio
         ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
             reference_audio, 
             ref_text
         )
         
-        # Procesar con F5-TTS (igual que el código oficial)
+        # Process with F5-TTS (same as official code)
         final_wave, final_sample_rate, combined_spectrogram = infer_process(
             ref_audio=ref_audio_processed,
             ref_text=ref_text_processed,
@@ -136,73 +136,73 @@ def generate_voice(reference_audio, ref_text, gen_text, language):
         end_time = time.time()
         processing_time = end_time - start_time
         
-        # result debería ser el audio generado
+        # result should be the generated audio
         output_path = "generated_audio.wav"
         
-        success_msg = f"✅ Audio generado exitosamente"
-        time_msg = f"⏱️ Tiempo: {processing_time:.2f}s"
+        success_msg = f"✅ Audio generated successfully"
+        time_msg = f"⏱️ Time: {processing_time:.2f}s"
         
         return (final_sample_rate, final_wave), success_msg, time_msg
         
     except Exception as e:
-        print(f"❌ Error en generación: {e}")
+        print(f"❌ Error in generation: {e}")
         import traceback
         traceback.print_exc()
         return None, f"❌ Error: {str(e)}", ""
 
 def generate_voice_with_steps(reference_audio, ref_text, gen_text, language):
-    """Generar voz capturando pasos intermedios del denoising"""
+    """Generate voice capturing intermediate denoising steps"""
     
-    # Validar entrada
+    # Validate input
     is_valid, msg = validate_audio(reference_audio)
     if not is_valid:
         return None, None, f"❌ {msg}"
     
     if not ref_text or not ref_text.strip():
-        return None, None, "❌ Debes escribir la transcripción del audio de referencia"
+        return None, None, "❌ You must write the transcription of the reference audio"
     
     if not gen_text or not gen_text.strip():
-        return None, None, "❌ Debes escribir el texto a generar"
+        return None, None, "❌ You must write the text to generate"
     
-    # Verificar que los modelos estén cargados
+    # Check that models are loaded
     if not model_loaded:
         success = load_models()
         if not success:
-            return None, None, "❌ Error cargando modelos"
+            return None, None, "❌ Error loading models"
     
     try:       
-        print("🔬 Generando con captura de pasos intermedios...")
+        print("🔬 Generating with intermediate step capture...")
         
-        # Preprocesar
+        # Preprocess
         ref_audio_processed, ref_text_processed = preprocess_ref_audio_text(
             reference_audio, 
             ref_text
         )
         
-        # Cargar y procesar audio
+        # Load and process audio
         audio, sr = torchaudio.load(ref_audio_processed)
         if audio.shape[0] > 1:
             audio = torch.mean(audio, dim=0, keepdim=True)
         
-        # Resamplear si es necesario
+        # Resample if necessary
         if sr != 24000:
             resampler = torchaudio.transforms.Resample(sr, 24000)
             audio = resampler(audio)
         
         audio = audio.to("cpu")
         
-        # Preparar texto
+        # Prepare text
         text_list = [ref_text_processed + gen_text]
         final_text_list = convert_char_to_pinyin(text_list)
         
-        # Calcular duración
+        # Calculate duration
         ref_audio_len = audio.shape[-1] // 256  # hop_length
         ref_text_len = len(ref_text_processed.encode("utf-8"))
         gen_text_len = len(gen_text.encode("utf-8"))
         duration = ref_audio_len + int(ref_audio_len / ref_text_len * gen_text_len)
         
-        # Generar CON trajectory
-        print("Llamando a model.sample() con captura de trajectory...")
+        # Generate WITH trajectory
+        print("Calling model.sample() with trajectory capture...")
         with torch.inference_mode():
             generated_mel, trajectory = model.sample(
                 cond=audio,
@@ -213,41 +213,41 @@ def generate_voice_with_steps(reference_audio, ref_text, gen_text, language):
                 sway_sampling_coef=-1.0,
             )
         
-        print(f"Trajectory capturado - Shape: {trajectory.shape}")
+        print(f"Trajectory captured - Shape: {trajectory.shape}")
         
-        # Extraer pasos específicos para mostrar
+        # Extract specific steps to display
         steps_to_extract = [0, 8, 16, 24, 32]
         step_audios = []
         
         for step_idx in steps_to_extract:
-            print(f"Procesando paso {step_idx}/32...")
+            print(f"Processing step {step_idx}/32...")
             mel_at_step = trajectory[step_idx]
             
-            # Recortar parte de referencia y permutar
+            # Crop reference part and permute
             mel_generated = mel_at_step[:, ref_audio_len:, :]
             mel_generated = mel_generated.permute(0, 2, 1)
             
-            # Convertir a audio con vocoder
+            # Convert to audio with vocoder
             audio_at_step = vocoder.decode(mel_generated)
             audio_np = audio_at_step.squeeze().cpu().numpy()
             
             step_audios.append((24000, audio_np))
         
-        # El último paso es el audio final
+        # The last step is the final audio
         final_audio = step_audios[-1]
         
-        print("✅ Generación con pasos completada")
+        print("✅ Generation with steps completed")
         
-        # Retornar: audio final, lista de pasos, mensaje
-        return final_audio, step_audios, f"✅ Generado con captura de {len(steps_to_extract)} pasos intermedios"
+        # Return: final audio, list of steps, message
+        return final_audio, step_audios, f"✅ Generated with capture of {len(steps_to_extract)} intermediate steps"
         
     except Exception as e:
-        print(f"❌ Error en generación con pasos: {e}")
+        print(f"❌ Error in generation with steps: {e}")
         import traceback
         traceback.print_exc()
-        return None, None, f"❌ Error: {str(e)}"
-        
+        return None, None, f"❌ Error: {str(e)}"    
 # Crear interfaz Gradio
+
 def create_interface():
     with gr.Blocks(
         title="F5-TTS Voice Cloning",
@@ -255,52 +255,54 @@ def create_interface():
     ) as demo:
         
         gr.Markdown("# 🎤 F5-TTS Voice Cloning")
-        gr.Markdown("Clona cualquier voz con solo 5-30 segundos de audio de referencia")
-        
+        gr.Markdown("Clone any voice with just 5-30 seconds of reference audio")
+        gr.Markdown("Developed by Noel Triguero. Model by SWivid")
+        gr.Markdown("---")
+
         with gr.Tabs():
             # Tab 1: Generación básica
-            with gr.Tab("Generación Básica"):
+            with gr.Tab("Basic Generation"):
                 with gr.Row():
                     with gr.Column(scale=1):
-                        gr.Markdown("## 📁 Entrada")
+                        gr.Markdown("## 📁 Input")
                         
                         reference_audio = gr.Audio(
-                            label="Audio de Referencia (5-30 segundos)",
+                            label="Reference Audio (5-30 segundos)",
                             type="filepath",
                             sources=["upload", "microphone"]
                         )
                         
                         ref_text = gr.Textbox(
-                            label="Transcripción del Audio de Referencia",
-                            placeholder="Escribe exactamente lo que dice el audio de referencia...",
+                            label="Reference Audio Transcription",
+                            placeholder="Write exactly what the reference audio says...",
                             lines=2,
-                            info="Importante: Debe coincidir con lo que dice el audio"
+                            info="Important: Must match what the audio says"
                         )
                         
                         gen_text = gr.Textbox(
-                            label="Texto a Generar",
-                            placeholder="Escribe el texto que quieres que diga con la voz clonada...",
+                            label="Text to Generate",
+                            placeholder="Write the text you want to say with the cloned voice...",
                             lines=3
                         )
                         
                         language = gr.Dropdown(
                             choices=SUPPORTED_LANGUAGES,
-                            value="es",
-                            label="Idioma",
-                            info="Idioma del texto a generar"
+                            value="en",
+                            label="Language",
+                            info="Language of the text to generate"
                         )
                         
-                        generate_btn = gr.Button("🚀 Generar Voz", variant="primary", size="lg")
+                        generate_btn = gr.Button("🚀 Generate Voice", variant="primary", size="lg")
                 
                 with gr.Row():
-                    status_msg = gr.Textbox(label="Estado", interactive=False, show_label=False)
+                    status_msg = gr.Textbox(label="Status", interactive=False, show_label=False)
                 
                 with gr.Row():
-                    time_msg = gr.Textbox(label="Tiempo de Procesamiento", interactive=False)
+                    time_msg = gr.Textbox(label="Processing Time", interactive=False)
                 
                 with gr.Row():
-                    output_audio = gr.Audio(label="🔊 Audio Generado", type="filepath")
-                
+                    output_audio = gr.Audio(label="🔊 Generated Audio", type="filepath")
+                 
                 generate_btn.click(
                     fn=generate_voice,
                     inputs=[reference_audio, ref_text, gen_text, language],
@@ -308,53 +310,53 @@ def create_interface():
                 )
             
             # Tab 2: Visualización del proceso de denoising
-            with gr.Tab("Visualización del Denoising"):
+            with gr.Tab("Denoising Visualization"):
                 gr.Markdown("""
-                ## 🔬 Visualización del Proceso de Denoising
+                ## 🔬 Denoising Process Visualization
                 
-                Esta sección te permite ver cómo el modelo transforma ruido puro en audio limpio paso a paso.
-                El modelo F5-TTS usa 32 pasos de "denoising" para generar el audio final.
+                This section lets you see how the model transforms pure noise into clean audio step by step.
+                The F5-TTS model uses 32 "denoising" steps to generate the final audio.
                 """)
-                
+      
                 with gr.Row():
                     with gr.Column(scale=1):
-                        gr.Markdown("### Entrada")
+                        gr.Markdown("### Input")
                         
                         ref_audio_steps = gr.Audio(
-                            label="Audio de Referencia",
+                            label="Reference Audio",
                             type="filepath",
                             sources=["upload", "microphone"]
                         )
                         
                         ref_text_steps = gr.Textbox(
-                            label="Transcripción",
+                            label="Transcription",
                             lines=2
                         )
                         
                         gen_text_steps = gr.Textbox(
-                            label="Texto a Generar",
+                            label="Text to Generate",
                             lines=3
                         )
                         
                         language_steps = gr.Dropdown(
                             choices=SUPPORTED_LANGUAGES,
                             value="es",
-                            label="Idioma"
+                            label="Language"
                         )
                         
                         generate_steps_btn = gr.Button(
-                            "🔬 Generar con Captura de Pasos", 
+                            "🔬 Generate with Step Capture", 
                             variant="primary"
                         )
                 
                 with gr.Row():
-                    status_steps = gr.Textbox(label="Estado", interactive=False)
+                    status_steps = gr.Textbox(label="Status", interactive=False)
                 
                 with gr.Row():
-                    gr.Markdown("### Audio Final")
-                    final_audio_output = gr.Audio(label="Resultado Final", type="numpy")
+                    gr.Markdown("### Final Audio ")
+                    final_audio_output = gr.Audio(label="Final Result", type="numpy")
                 
-                gr.Markdown("### Pasos Intermedios del Denoising")
+                gr.Markdown("### Intermediate Denoising Steps")
                 
                 with gr.Row():
                     step_slider = gr.Slider(
@@ -362,17 +364,17 @@ def create_interface():
                         maximum=4,
                         value=4,
                         step=1,
-                        label="Seleccionar Paso",
-                        info="0=Ruido inicial, 1=Paso 8, 2=Paso 16, 3=Paso 24, 4=Paso 32 (final)"
+                        label="Select Step",
+                        info="0=Initial noise, 1=Step 8, 2=Step 16, 3=Step 24, 4=Step 32 (final)"
                     )
                 
                 with gr.Row():
                     step_audio = gr.Audio(
-                        label="Audio en el Paso Seleccionado",
+                        label="Audio at Selected Step",
                         type="numpy"
                     )
                 
-                # Estado oculto para guardar todos los pasos
+                # Hiden state to store all steps
                 all_steps_state = gr.State(value=None)
                 
                 def update_step_audio(step_index, all_steps):
@@ -380,12 +382,12 @@ def create_interface():
                         return None
                     return all_steps[int(step_index)]
                 
-                # Generar y guardar pasos
+                # Generate with steps and store all steps in state
                 def process_with_steps(ref_audio, ref_text, gen_text, lang):
                     final, steps, status = generate_voice_with_steps(
                         ref_audio, ref_text, gen_text, lang
                     )
-                    # Solo devolver 4 valores si steps existe
+                    # Only return the last step audio for the slider
                     if steps:
                         return final, steps, steps[-1], status
                     else:
@@ -402,43 +404,42 @@ def create_interface():
                     inputs=[step_slider, all_steps_state],
                     outputs=[step_audio]
                 )
-                
+                       
                 gr.Markdown("""
-                ### 📊 Explicación de los Pasos
+                ### 📊 Step Explanation
                 
-                - **Paso 0 (Ruido)**: Ruido aleatorio puro - el punto de partida
-                - **Paso 8**: Primeras estructuras emergen, muy distorsionado
-                - **Paso 16**: Se distinguen patrones de habla, aún con artefactos
-                - **Paso 24**: Audio casi limpio, algunas imperfecciones
-                - **Paso 32 (Final)**: Audio completamente limpio y natural
+                - **Step 0 (Noise)**: Pure random noise - the starting point
+                - **Step 8**: First structures emerge, very distorted
+                - **Step 16**: Speech patterns distinguishable, still with artifacts
+                - **Step 24**: Almost clean audio, some imperfections
+                - **Step 32 (Final)**: Completely clean and natural audio
                 
-                Este proceso se llama "diffusion" - el modelo aprende a "limpiar" ruido gradualmente.
+                This process is called "diffusion" - the model learns to "clean" noise gradually.
                 """)
-        
         gr.Markdown("""
-        ## 💡 Consejos para Mejores Resultados
+        ## 💡 Tips for Better Results
         
-        - **Audio limpio:** Sin ruido de fondo, música o eco
-        - **Duración:** 5-30 segundos es ideal
-        - **Transcripción exacta:** La transcripción debe coincidir exactamente con el audio
-        - **Habla clara:** Volumen constante y pronunciación clara
-        - **Idioma:** El audio de referencia y el texto pueden estar en idiomas diferentes
+        - **Clean audio:** No background noise, music or echo
+        - **Duration:** 5-30 seconds is ideal
+        - **Exact transcription:** The transcription must match the audio exactly
+        - **Clear speech:** Constant volume and clear pronunciation
+        - **Language:** Reference audio and text can be in different languages
         
-        ## 🔧 Información Técnica
+        ## 🔧 Technical Information
         
-        - **Modelo:** F5-TTS (Flow Matching Text-to-Speech)
+        - **Model:** F5-TTS (Flow Matching Text-to-Speech)
         - **Vocoder:** Vocos
-        - **Dispositivo:** CPU (puede tardar ~30-60 segundos)
+        - **Device:** CPU (may take ~30-60 seconds)
         """)
     
     return demo
 
 if __name__ == "__main__":
-    # Pre-cargar modelos al iniciar (opcional, mejora primera experiencia)
-    print("🚀 Iniciando F5-TTS Voice Cloning App")
+    # Pre-load models at startup (optional, improves first experience)
+    print("🚀 Starting F5-TTS Voice Cloning App")
     print("=" * 50)
     
-    # Comentar la siguiente línea si quieres carga bajo demanda
+    # Comment the following line if you want on-demand loading
     # load_models()
     
     demo = create_interface()
