@@ -358,14 +358,14 @@ def create_interface():
         **Duration:** 5-30 seconds is ideal  
         **Exact transcription:** The transcription must match the audio exactly  
         **Clear speech:** Constant volume and clear pronunciation  
-        **Language:** Reference audio and text can be in different languages
+        **Language:** Reference audio and text should be in english or chinese
 
         ---
         ## 🔧 Technical Information
 
         **Model:** F5-TTS (Flow Matching Text-to-Speech)  
         **Vocoder:** Vocos  
-        **Device:** CPU (may take ~30-60 seconds)
+        **Device:** CPU (may take a while...)
 
         ---
         """)
