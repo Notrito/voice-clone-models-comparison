@@ -336,7 +336,7 @@ def create_interface():
         generate_steps_btn.click(
             fn=process_with_steps,
             inputs=[ref_audio_steps, ref_text_steps, gen_text_steps],
-            outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
+            outputs=[all_steps_state, step_audio, status_steps]
         )
         
         step_slider.change(
