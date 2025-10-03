@@ -14,7 +14,7 @@ from f5_tts.infer.utils_infer import preprocess_ref_audio_text, convert_char_to_
 
 # Configuración
 MODEL_NAME = "F5-TTS"
-SUPPORTED_LANGUAGES = ["en", "es"]
+SUPPORTED_LANGUAGES = ["en", "es", "fr", "de", "it", "zh"]
 MAX_AUDIO_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Variables globales para el modelo (se cargan una vez)
@@ -91,7 +91,7 @@ def validate_audio(audio_file):
     except Exception as e:
         return False, f"Error validating audio: {e}"
 
-def generate_voice(reference_audio, ref_text, gen_text, language):
+def generate_voice(reference_audio, ref_text, gen_text):
     """Generate voice with F5-TTS"""
     
     # Validate input
@@ -150,7 +150,7 @@ def generate_voice(reference_audio, ref_text, gen_text, language):
         traceback.print_exc()
         return None, f"❌ Error: {str(e)}", ""
 
-def generate_voice_with_steps(reference_audio, ref_text, gen_text, language):
+def generate_voice_with_steps(reference_audio, ref_text, gen_text):
     """Generate voice capturing intermediate denoising steps"""
     
     # Validate input
@@ -285,12 +285,6 @@ def create_interface():
                             lines=3
                         )
                         
-                        language = gr.Dropdown(
-                            choices=SUPPORTED_LANGUAGES,
-                            value="en",
-                            label="Language",
-                            info="Language of the text to generate"
-                        )
                         
                         generate_btn = gr.Button("🚀 Generate Voice", variant="primary", size="lg")
                 
@@ -305,7 +299,7 @@ def create_interface():
                  
                 generate_btn.click(
                     fn=generate_voice,
-                    inputs=[reference_audio, ref_text, gen_text, language],
+                    inputs=[reference_audio, ref_text, gen_text],
                     outputs=[output_audio, status_msg, time_msg]
                 )
             
@@ -336,12 +330,6 @@ def create_interface():
                         gen_text_steps = gr.Textbox(
                             label="Text to Generate",
                             lines=3
-                        )
-                        
-                        language_steps = gr.Dropdown(
-                            choices=SUPPORTED_LANGUAGES,
-                            value="es",
-                            label="Language"
                         )
                         
                         generate_steps_btn = gr.Button(
@@ -383,9 +371,9 @@ def create_interface():
                     return all_steps[int(step_index)]
                 
                 # Generate with steps and store all steps in state
-                def process_with_steps(ref_audio, ref_text, gen_text, lang):
+                def process_with_steps(ref_audio, ref_text, gen_text):
                     final, steps, status = generate_voice_with_steps(
-                        ref_audio, ref_text, gen_text, lang
+                        ref_audio, ref_text, gen_text
                     )
                     # Only return the last step audio for the slider
                     if steps:
@@ -395,7 +383,7 @@ def create_interface():
                 
                 generate_steps_btn.click(
                     fn=process_with_steps,
-                    inputs=[ref_audio_steps, ref_text_steps, gen_text_steps, language_steps],
+                    inputs=[ref_audio_steps, ref_text_steps, gen_text_steps],
                     outputs=[final_audio_output, all_steps_state, step_audio, status_steps]
                 )
                 
@@ -423,7 +411,6 @@ def create_interface():
         - **Duration:** 5-30 seconds is ideal
         - **Exact transcription:** The transcription must match the audio exactly
         - **Clear speech:** Constant volume and clear pronunciation
-        - **Language:** Reference audio and text can be in different languages
         
         ## 🔧 Technical Information
         
